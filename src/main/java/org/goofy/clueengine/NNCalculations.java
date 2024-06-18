@@ -11,6 +11,8 @@ import org.neuroph.util.ConnectionFactory;
 import org.neuroph.util.NeuronProperties;
 import org.neuroph.util.TransferFunctionType;
 
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.stream.IntStream;
 
@@ -28,7 +30,7 @@ public class NNCalculations {
     }
 
     public static void main(String[] args) {
-        getInstance().load();
+        getInstance().learn();
         getInstance().TUI();
     }
 
@@ -64,7 +66,9 @@ public class NNCalculations {
         cardGuesser.setInputNeurons(inputLayer.getNeurons());
         cardGuesser.setOutputNeurons(outputLayer.getNeurons());
 
-        cardGuesser.setLearningRule(new BackPropagation());
+        BackPropagation learningRule = new BackPropagation();
+        learningRule.setMaxIterations(1000);
+        cardGuesser.setLearningRule(learningRule);
         System.out.println("Network Initialized!");
 
         System.out.println("Learning...");
@@ -76,15 +80,33 @@ public class NNCalculations {
     public void TUI() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Entered TUI Mode");
+        System.out.println("Load previous data set? (Y/N):");
+        if(scanner.nextLine().toLowerCase(Locale.ROOT).contains("y")) {
+            DataSetAssembler.loadClueDataSet();
+        }
         int i = 0;
         while (true) {
-            learn();
             Player.players[i].onTurn();
             i = (i + 1) % Player.players.length;
-            System.out.flush();
-            System.out.println("Press 'q' to quit, or enter to continue.");
+            System.out.println("Press 'q' to quit, 'f' if finished, or enter to continue.");
             String input = scanner.nextLine();
             if (input.contains("q")) {
+                break;
+            }
+            if (input.contains("f")) {
+                while (true) {
+                    try {
+                        System.out.println("Input final cards:");
+                        String finalCardsString = scanner.nextLine();
+                        String[] cardstrings = finalCardsString.split(",");
+                        int[] finalCards = Arrays.stream(cardstrings).mapToInt(Integer::parseInt).toArray();
+                        DataSetAssembler.updateClueDataSet(finalCards);
+                        System.out.println("Successfully updated and saved the DataSet, exiting...");
+                        break;
+                    } catch (NumberFormatException e) {
+                        System.out.println("Cards not valid, input as 'x,y,z'");
+                    }
+                }
                 break;
             }
         }
@@ -94,7 +116,7 @@ public class NNCalculations {
         cardGuesser = NeuralNetwork.load(NNFilePath);
     }
 
-    public record Guess(int[] cards, Player guesser, Player responder) {
+    public record Guess(int[] cards) {
         public double getChanceOfCard(int index, double lastChanceOfCard) {
             int[] relevants = getRelevantTo(index);
 

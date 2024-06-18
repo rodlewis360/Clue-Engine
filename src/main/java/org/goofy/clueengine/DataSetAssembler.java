@@ -16,7 +16,7 @@ public class DataSetAssembler {
         Arrays.fill(NNCalculations.getInstance().cardChances, 18.0/21.0);
     }
 
-    public static DataSet updateClueDataSet(int[] finalCards, Player[] players) {
+    public static DataSet updateClueDataSet(int[] finalCards) {
         int i;
         for (NNCalculations.Guess guess : guessChances.keySet()) {
             i = 0;

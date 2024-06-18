@@ -21,7 +21,7 @@ public record Player(ArrayList<NNCalculations.Guess> guesses, ArrayList<NNCalcul
                 String[] cardstrings = input.split(",");
                 cards = Arrays.stream(cardstrings).mapToInt(Integer::parseInt).toArray();
                 break;
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 System.out.println("Cards not valid, input as 'x,y,z'");
             }
         }
@@ -39,7 +39,15 @@ public record Player(ArrayList<NNCalculations.Guess> guesses, ArrayList<NNCalcul
             }
         }
 
-        NNCalculations.Guess guess = new NNCalculations.Guess(cards, this, responder);
+        NNCalculations.Guess guess = new NNCalculations.Guess(cards);
+        guesses.add(guess);
+        responder.responses.add(guess);
+        double[] cardChances = guess.getAllChancesOfCards(NNCalculations.getInstance().cardChances);
+        DataSetAssembler.guessChances.putIfAbsent(guess, new Double[] {cardChances[0], cardChances[1], cardChances[2]});
+    }
+
+    public void onTurn(int[] cards, Player responder) {
+        NNCalculations.Guess guess = new NNCalculations.Guess(cards);
         guesses.add(guess);
         responder.responses.add(guess);
         double[] cardChances = guess.getAllChancesOfCards(NNCalculations.getInstance().cardChances);
